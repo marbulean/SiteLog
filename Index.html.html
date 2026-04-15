@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SiteLog – Daily Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e1117;
+    --surface: #161b27;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --amber: #f59e0b;
+    --amber-dim: #92610a;
+    --text: #e2ddd4;
+    --muted: #6b7280;
+    --green: #34d399;
+    --red: #f87171;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); }
+  ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-thumb { background: var(--amber); }
+
+  /* HEADER */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: #0a0d13;
+    border-bottom: 2px solid var(--amber);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 13px 0; }
+  .brand-icon {
+    width: 36px; height: 36px; background: var(--amber); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-weight: 700; font-size: 13px; color: #0a0d13; letter-spacing: -1px;
+  }
+  .brand-name { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--amber); letter-spacing: 3px; }
+  .brand-sub { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  nav { display: flex; }
+  .nav-btn {
+    background: none; border: none; border-bottom: 3px solid transparent;
+    color: var(--muted); padding: 18px 14px; font-family: var(--mono); font-size: 10px;
+    font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+    transition: all .2s; position: relative;
+  }
+  .nav-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+  .nav-badge {
+    position: absolute; top: 10px; right: 4px;
+    background: var(--amber); color: #0a0d13; border-radius: 10px;
+    padding: 1px 6px; font-size: 9px; font-weight: 700;
+  }
+
+  /* MAIN */
+  main { max-width: 640px; margin: 0 auto; padding: 24px 14px 80px; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 24px; }
+  .section-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--amber);
+    margin-bottom: 10px; padding-left: 2px;
+  }
+  .section-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 16px;
+  }
+
+  /* FIELDS */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label.lbl {
+    display: block; font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--amber); margin-bottom: 7px;
+  }
+  input[type=text], input[type=number], input[type=date], select, textarea {
+    width: 100%; background: #0e1117; border: 1.5px solid var(--border);
+    color: var(--text); border-radius: 7px; padding: 11px 13px;
+    font-family: var(--sans); font-size: 15px; outline: none;
+    transition: border .2s; -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--amber); }
+  select option { background: #0e1117; }
+  .err-input { border-color: var(--red) !important; }
+  .err-msg { color: var(--red); font-size: 10px; margin-top: 5px; font-weight: 600; font-family: var(--mono); letter-spacing: 1px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ZONE PILLS */
+  .zone-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .zone-pill {
+    padding: 12px 6px; background: #0e1117; border: 1.5px solid var(--border);
+    border-radius: 8px; text-align: center; cursor: pointer;
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--muted); transition: all .15s; user-select: none;
+  }
+  .zone-pill.sel { background: #1a1500; border-color: var(--amber); color: var(--amber); }
+
+  /* LOC TYPE TOGGLE */
+  .loc-toggle { display: flex; gap: 8px; }
+  .loc-btn {
+    flex: 1; padding: 11px 8px; background: #0e1117; border: 1.5px solid var(--border);
+    border-radius: 7px; color: var(--muted); font-family: var(--mono);
+    font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .loc-btn.sel { background: #1a1500; border-color: var(--amber); color: var(--text); }
+
+  /* ACTIVITY CHIPS */
+  .act-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .act-chip {
+    padding: 12px 10px; background: #0e1117; border: 1.5px solid var(--border);
+    border-radius: 8px; cursor: pointer; font-family: var(--sans); font-size: 13px;
+    font-weight: 500; color: var(--muted); transition: all .15s; text-align: center;
+    user-select: none;
+  }
+  .act-chip.sel { background: #1a1500; border-color: var(--amber); color: var(--text); }
+
+  /* STATUS */
+  .status-row { display: flex; gap: 8px; }
+  .status-btn {
+    flex: 1; padding: 11px; background: #0e1117; border: 1.5px solid var(--border);
+    border-radius: 7px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+    color: var(--muted); transition: all .15s; text-align: center;
+  }
+  .status-btn.prog.sel { background: #1a1500; border-color: var(--amber); color: var(--amber); }
+  .status-btn.done.sel { background: #0a1f14; border-color: var(--green); color: var(--green); }
+
+  /* PHOTO UPLOAD */
+  .photo-upload-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 16px; border: 2px dashed var(--border); border-radius: 8px;
+    cursor: pointer; color: var(--muted); font-family: var(--mono);
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+    transition: all .2s; width: 100%;
+  }
+  .photo-upload-btn:hover, .photo-upload-btn:active { border-color: var(--amber); color: var(--amber); }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 8px; margin-top: 10px; }
+  .photo-thumb { position: relative; aspect-ratio: 1; border-radius: 7px; overflow: hidden; background: var(--surface2); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-remove {
+    position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.75);
+    border: none; border-radius: 50%; width: 22px; height: 22px; color: #fff;
+    font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .upload-status { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 8px; text-align: center; }
+
+  /* SUBMIT */
+  .submit-btn {
+    width: 100%; padding: 17px; background: var(--amber); border: none;
+    border-radius: 9px; font-family: var(--mono); font-size: 14px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase; color: #0a0d13;
+    cursor: pointer; transition: background .2s, transform .1s; margin-top: 8px;
+  }
+  .submit-btn:hover { background: #fbbf24; }
+  .submit-btn:active { transform: scale(.98); }
+  .submit-btn:disabled { background: #3a3020; color: #6b5a30; cursor: not-allowed; transform: none; }
+
+  /* SUCCESS */
+  .success-bar {
+    display: flex; align-items: center; gap: 14px;
+    background: #0a1f14; border: 1.5px solid var(--green);
+    border-radius: 9px; padding: 16px 18px; margin-bottom: 22px;
+    animation: slideIn .3s ease;
+  }
+  .success-icon { font-size: 22px; color: var(--green); }
+  .success-title { font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 1px; }
+  .success-sub { font-size: 12px; color: var(--green); opacity: .8; margin-top: 3px; }
+
+  /* ERROR BANNER */
+  .error-bar {
+    display: flex; align-items: center; gap: 14px;
+    background: #1f0a0a; border: 1.5px solid var(--red);
+    border-radius: 9px; padding: 16px 18px; margin-bottom: 22px;
+    animation: slideIn .3s ease;
+  }
+
+  /* HISTORY CARDS */
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 18px; }
+  .filter-bar select { flex: 1; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: #3a4560; }
+  .card-top { padding: 16px; display: flex; gap: 12px; cursor: pointer; }
+  .card-left { flex: 1; min-width: 0; }
+  .card-name { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--amber); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+  .card-activity { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: 1px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-loc { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; flex-shrink: 0; }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .pill-prog { background: #1a1500; color: var(--amber); }
+  .pill-done { background: #0a1f14; color: var(--green); }
+  .card-date { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .card-chevron { color: var(--amber); font-size: 14px; margin-top: auto; }
+  .card-body { padding: 0 16px 16px; border-top: 1px solid var(--border); animation: slideIn .25s ease; }
+  .card-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+  .chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px; font-size: 12px;
+    font-family: var(--mono); color: #9ca3af; font-weight: 500;
+  }
+  .card-notes { font-size: 13px; color: #9ca3af; line-height: 1.6; font-style: italic; margin-bottom: 10px; }
+  .card-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px,1fr)); gap: 6px; margin-bottom: 10px; }
+  .card-photo { aspect-ratio: 1; border-radius: 6px; overflow: hidden; }
+  .card-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .card-photo a { display: block; width: 100%; height: 100%; }
+  .drive-link {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    background: #0e1117; border: 1px solid var(--border); border-radius: 7px;
+    text-decoration: none; color: #60a5fa; font-family: var(--mono);
+    font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-bottom: 10px;
+  }
+  .delete-btn {
+    background: none; border: 1px solid #3a2020; color: var(--red);
+    font-size: 10px; font-weight: 700; font-family: var(--mono); letter-spacing: 1px;
+    text-transform: uppercase; padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 70px 20px; color: var(--muted); }
+  .empty-icon { font-size: 48px; margin-bottom: 14px; }
+  .empty-title { font-family: var(--mono); font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+
+  /* SETUP NOTICE */
+  .setup-notice {
+    background: #1a1500; border: 1.5px solid var(--amber-dim);
+    border-radius: 9px; padding: 14px 16px; margin-bottom: 22px;
+    font-size: 13px; line-height: 1.6;
+  }
+  .setup-notice strong { color: var(--amber); font-family: var(--mono); }
+
+  /* SPINNER */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #3a3020; border-top-color: var(--amber); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 8px; }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fade { animation: slideIn .3s ease; }
+
+  /* MOBILE ADJUSTMENTS */
+  @media (max-width: 400px) {
+    .row2 { grid-template-columns: 1fr; }
+    .zone-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  ⚙️  CONFIGURE THIS before sharing with your team     -->
+<!-- ══════════════════════════════════════════════════════ -->
+<script>
+  // Paste your Google Apps Script Web App URL here after setup:
+  const SCRIPT_URL = https://script.google.com/macros/s/AKfycbzlRHycUA7VsYuqefL6ms9rmktxEcmmh3EmAZswhr-e6P3X8cw76hwNET5gmyCvhs0tpg/exec;
+</script>
+<!-- ══════════════════════════════════════════════════════ -->
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">SL</div>
+    <div>
+      <div class="brand-name">SITELOG</div>
+      <div class="brand-sub">Field Progress Tracker</div>
+    </div>
+  </div>
+  <nav>
+    <button class="nav-btn active" id="tab-log" onclick="switchTab('log')">Log Entry</button>
+    <button class="nav-btn" id="tab-history" onclick="switchTab('history')">
+      History <span class="nav-badge" id="history-badge" style="display:none">0</span>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ═══════════ LOG ENTRY TAB ═══════════ -->
+  <div id="view-log">
+
+    <div id="setup-notice" class="setup-notice" style="display:none">
+      ⚠️ <strong>Setup needed:</strong> Open this HTML file and paste your Google Apps Script URL into the <code>SCRIPT_URL</code> variable at the top. See the setup guide for instructions.
+    </div>
+
+    <div id="flash-success" style="display:none" class="success-bar">
+      <div class="success-icon">✓</div>
+      <div>
+        <div class="success-title">Entry Submitted!</div>
+        <div class="success-sub">Saved to Google Sheets & Drive</div>
+      </div>
+    </div>
+
+    <div id="flash-error" style="display:none" class="error-bar">
+      <div style="font-size:20px">⚠</div>
+      <div>
+        <div style="font-family:var(--mono);font-weight:700;font-size:13px" id="error-msg">Submission failed</div>
+        <div style="font-size:12px;color:var(--red);opacity:.8;margin-top:3px">Check your connection and try again</div>
+      </div>
+    </div>
+
+    <!-- WHO -->
+    <div class="section">
+      <div class="section-label">Who</div>
+      <div class="section-box">
+        <div class="row2">
+          <div class="field">
+            <label class="lbl">Your Name *</label>
+            <input type="text" id="f-name" placeholder="Full name" autocomplete="name">
+            <div class="err-msg" id="err-name" style="display:none">Enter your name</div>
+          </div>
+          <div class="field">
+            <label class="lbl">Date *</label>
+            <input type="date" id="f-date">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <div class="section">
+      <div class="section-label">Location</div>
+      <div class="section-box">
+
+        <div class="field">
+          <label class="lbl">Zone *</label>
+          <div class="zone-grid">
+            <div class="zone-pill" onclick="selectZone(this,'Zone 1')">Zone 1</div>
+            <div class="zone-pill" onclick="selectZone(this,'Zone 2')">Zone 2</div>
+            <div class="zone-pill" onclick="selectZone(this,'Zone 3')">Zone 3</div>
+            <div class="zone-pill" onclick="selectZone(this,'Zone 4')">Zone 4</div>
+          </div>
+          <div class="err-msg" id="err-zone" style="display:none">Select a zone</div>
+        </div>
+
+        <div class="field">
+          <label class="lbl">Road *</label>
+          <input type="text" id="f-road" placeholder="e.g. Al Rayyan Road" autocomplete="off">
+          <div class="err-msg" id="err-road" style="display:none">Enter the road name</div>
+        </div>
+
+        <div class="field">
+          <label class="lbl">Location Type *</label>
+          <div class="loc-toggle">
+            <button class="loc-btn sel" id="lt-trench" onclick="setLocType('trench')">⇔ Trench (MH to MH)</button>
+            <button class="loc-btn" id="lt-single" onclick="setLocType('single')">◎ Single Manhole</button>
+          </div>
+        </div>
+
+        <div id="trench-fields">
+          <div class="row2">
+            <div class="field">
+              <label class="lbl">From Manhole *</label>
+              <input type="text" id="f-mh-from" placeholder="e.g. MH-01" autocomplete="off">
+              <div class="err-msg" id="err-mh-from" style="display:none">Required</div>
+            </div>
+            <div class="field">
+              <label class="lbl">To Manhole *</label>
+              <input type="text" id="f-mh-to" placeholder="e.g. MH-05" autocomplete="off">
+              <div class="err-msg" id="err-mh-to" style="display:none">Required</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="single-fields" style="display:none">
+          <div class="field">
+            <label class="lbl">Manhole Number *</label>
+            <input type="text" id="f-mh-single" placeholder="e.g. MH-03" autocomplete="off">
+            <div class="err-msg" id="err-mh-single" style="display:none">Required</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="section">
+      <div class="section-label">Activity</div>
+      <div class="section-box">
+
+        <div class="field">
+          <label class="lbl">Activity Type *</label>
+          <div class="act-grid">
+            <div class="act-chip" onclick="selectActivity(this,'Excavation')">⛏ Excavation</div>
+            <div class="act-chip" onclick="selectActivity(this,'Backfilling')">🪣 Backfilling</div>
+            <div class="act-chip" onclick="selectActivity(this,'Pipe Laying')">🔧 Pipe Laying</div>
+            <div class="act-chip" onclick="selectActivity(this,'Manhole Installation')">🔵 MH Installation</div>
+            <div class="act-chip" onclick="selectActivity(this,'Concrete / Reinstatement')">🧱 Concrete</div>
+            <div class="act-chip" onclick="selectActivity(this,'Other')">+ Other</div>
+          </div>
+          <div class="err-msg" id="err-activity" style="display:none">Select an activity</div>
+        </div>
+
+        <div class="field" id="other-field" style="display:none">
+          <label class="lbl">Describe Activity *</label>
+          <input type="text" id="f-activity-other" placeholder="What was done?" autocomplete="off">
+          <div class="err-msg" id="err-activity-other" style="display:none">Required</div>
+        </div>
+
+        <div class="field">
+          <label class="lbl">Status *</label>
+          <div class="status-row">
+            <button class="status-btn prog sel" id="st-prog" onclick="setStatus('In Progress')">⏳ In Progress</button>
+            <button class="status-btn done" id="st-done" onclick="setStatus('Completed')">✓ Completed</button>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label class="lbl">Metres Completed</label>
+            <input type="number" id="f-metres" placeholder="0" min="0" step="0.1">
+          </div>
+          <div class="field">
+            <label class="lbl">No. of Manholes</label>
+            <input type="number" id="f-mh-count" placeholder="0" min="0">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PHOTOS & NOTES -->
+    <div class="section">
+      <div class="section-label">Photos & Notes</div>
+      <div class="section-box">
+
+        <div class="field">
+          <label class="lbl">Site Photos</label>
+          <label class="photo-upload-btn">
+            <span>📷</span> Add Photos
+            <input type="file" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
+          </label>
+          <div id="photo-grid" class="photo-grid"></div>
+          <div class="upload-status" id="upload-status"></div>
+        </div>
+
+        <div class="field">
+          <label class="lbl">Observations / Notes</label>
+          <textarea id="f-notes" rows="3" placeholder="Observations, issues, site conditions…" style="resize:vertical"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitForm()">Submit Entry →</button>
+
+  </div><!-- /view-log -->
+
+
+  <!-- ═══════════ HISTORY TAB ═══════════ -->
+  <div id="view-history" style="display:none">
+    <div class="filter-bar">
+      <select id="filter-name" onchange="renderHistory()">
+        <option value="">All Engineers</option>
+      </select>
+      <select id="filter-activity" onchange="renderHistory()">
+        <option value="">All Activities</option>
+        <option>Excavation</option>
+        <option>Backfilling</option>
+        <option>Pipe Laying</option>
+        <option>Manhole Installation</option>
+        <option>Concrete / Reinstatement</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+</main>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────────────
+let selectedZone = "";
+let locType = "trench";
+let selectedActivity = "";
+let selectedStatus = "In Progress";
+let photos = []; // {file, url, name}
+let entries = [];
+let expandedId = null;
+const STORAGE_KEY = "sitelog_v2";
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Set today's date
+  const d = new Date();
+  const iso = d.toISOString().split('T')[0];
+  document.getElementById('f-date').value = iso;
+
+  // Load saved entries
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) entries = JSON.parse(raw);
+  } catch(e) {}
+
+  updateBadge();
+  renderHistory();
+
+  // Show setup notice if URL not configured
+  if (SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+    document.getElementById('setup-notice').style.display = 'block';
+  }
+});
+
+// ─── TAB SWITCHING ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('view-log').style.display = tab === 'log' ? '' : 'none';
+  document.getElementById('view-history').style.display = tab === 'history' ? '' : 'none';
+  document.getElementById('tab-log').classList.toggle('active', tab === 'log');
+  document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+  if (tab === 'history') renderHistory();
+}
+
+// ─── ZONE ──────────────────────────────────────────────────────────────────
+function selectZone(el, zone) {
+  document.querySelectorAll('.zone-pill').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedZone = zone;
+  hide('err-zone');
+}
+
+// ─── LOCATION TYPE ─────────────────────────────────────────────────────────
+function setLocType(type) {
+  locType = type;
+  document.getElementById('lt-trench').classList.toggle('sel', type === 'trench');
+  document.getElementById('lt-single').classList.toggle('sel', type === 'single');
+  document.getElementById('trench-fields').style.display = type === 'trench' ? '' : 'none';
+  document.getElementById('single-fields').style.display = type === 'single' ? '' : 'none';
+}
+
+// ─── ACTIVITY ──────────────────────────────────────────────────────────────
+function selectActivity(el, act) {
+  document.querySelectorAll('.act-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedActivity = act;
+  document.getElementById('other-field').style.display = act === 'Other' ? '' : 'none';
+  hide('err-activity');
+}
+
+// ─── STATUS ────────────────────────────────────────────────────────────────
+function setStatus(s) {
+  selectedStatus = s;
+  document.getElementById('st-prog').classList.toggle('sel', s === 'In Progress');
+  document.getElementById('st-done').classList.toggle('sel', s === 'Completed');
+}
+
+// ─── PHOTOS ────────────────────────────────────────────────────────────────
+function handlePhotos(input) {
+  const files = Array.from(input.files);
+  const grid = document.getElementById('photo-grid');
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const obj = { file, url: e.target.result, name: file.name, id: Date.now() + Math.random() };
+      photos.push(obj);
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.dataset.id = obj.id;
+      thumb.innerHTML = `<img src="${obj.url}" alt="${obj.name}">
+        <button class="photo-remove" onclick="removePhoto(${obj.id})">×</button>`;
+      grid.appendChild(thumb);
+      updatePhotoStatus();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function removePhoto(id) {
+  photos = photos.filter(p => p.id !== id);
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (el) el.remove();
+  updatePhotoStatus();
+}
+
+function updatePhotoStatus() {
+  const el = document.getElementById('upload-status');
+  el.textContent = photos.length > 0 ? `${photos.length} photo${photos.length>1?'s':''} selected` : '';
+}
+
+// ─── VALIDATE ──────────────────────────────────────────────────────────────
+function validate() {
+  let ok = true;
+  const name = val('f-name');
+  if (!name) { show('err-name'); err('f-name'); ok = false; } else { hide('err-name'); unerr('f-name'); }
+  if (!selectedZone) { show('err-zone'); ok = false; } else { hide('err-zone'); }
+  const road = val('f-road');
+  if (!road) { show('err-road'); err('f-road'); ok = false; } else { hide('err-road'); unerr('f-road'); }
+  if (locType === 'trench') {
+    if (!val('f-mh-from')) { show('err-mh-from'); err('f-mh-from'); ok = false; } else { hide('err-mh-from'); unerr('f-mh-from'); }
+    if (!val('f-mh-to')) { show('err-mh-to'); err('f-mh-to'); ok = false; } else { hide('err-mh-to'); unerr('f-mh-to'); }
+  } else {
+    if (!val('f-mh-single')) { show('err-mh-single'); err('f-mh-single'); ok = false; } else { hide('err-mh-single'); unerr('f-mh-single'); }
+  }
+  if (!selectedActivity) { show('err-activity'); ok = false; } else { hide('err-activity'); }
+  if (selectedActivity === 'Other' && !val('f-activity-other')) { show('err-activity-other'); err('f-activity-other'); ok = false; } else { hide('err-activity-other'); unerr('f-activity-other'); }
+  return ok;
+}
+
+// ─── SUBMIT ────────────────────────────────────────────────────────────────
+async function submitForm() {
+  hide('flash-success'); hide('flash-error');
+  if (!validate()) { window.scrollTo({top:0,behavior:'smooth'}); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Submitting…';
+
+  const location = locType === 'trench'
+    ? `${val('f-mh-from')} → ${val('f-mh-to')}`
+    : val('f-mh-single');
+
+  const actLabel = selectedActivity === 'Other' ? val('f-activity-other') : selectedActivity;
+
+  const entry = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    name: val('f-name'),
+    date: val('f-date'),
+    zone: selectedZone,
+    road: val('f-road'),
+    locationType: locType,
+    location,
+    activity: actLabel,
+    status: selectedStatus,
+    metres: val('f-metres') || '',
+    manholeCount: val('f-mh-count') || '',
+    notes: val('f-notes'),
+    photoCount: photos.length,
+    driveLink: '',
+    photoUrls: photos.map(p => p.url), // stored locally
+  };
+
+  // Submit to Google Apps Script
+  if (SCRIPT_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
+    try {
+      const formData = new FormData();
+      formData.append('data', JSON.stringify({
+        name: entry.name, date: entry.date, zone: entry.zone,
+        road: entry.road, locationType: locType, location: entry.location,
+        activity: entry.activity, status: entry.status,
+        metres: entry.metres, manholeCount: entry.manholeCount,
+        notes: entry.notes, photoCount: entry.photoCount,
+        timestamp: entry.timestamp,
+      }));
+      photos.forEach((p, i) => formData.append(`photo_${i}`, p.file, p.name));
+
+      const res = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
+      const json = await res.json();
+      if (json.driveLink) entry.driveLink = json.driveLink;
+    } catch(e) {
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Entry →';
+      document.getElementById('error-msg').textContent = 'Could not reach server. Check your connection.';
+      show('flash-error');
+      window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+  }
+
+  // Save locally
+  entries.unshift(entry);
+  saveEntries();
+  updateBadge();
+
+  // Reset form
+  resetForm();
+  btn.disabled = false;
+  btn.innerHTML = 'Submit Entry →';
+  show('flash-success');
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(() => hide('flash-success'), 4000);
+}
+
+// ─── RESET FORM ────────────────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-road').value = '';
+  document.getElementById('f-mh-from').value = '';
+  document.getElementById('f-mh-to').value = '';
+  document.getElementById('f-mh-single').value = '';
+  document.getElementById('f-activity-other').value = '';
+  document.getElementById('f-metres').value = '';
+  document.getElementById('f-mh-count').value = '';
+  document.getElementById('f-notes').value = '';
+  document.querySelectorAll('.zone-pill').forEach(p => p.classList.remove('sel'));
+  document.querySelectorAll('.act-chip').forEach(c => c.classList.remove('sel'));
+  selectedZone = ''; selectedActivity = '';
+  setLocType('trench');
+  setStatus('In Progress');
+  photos = [];
+  document.getElementById('photo-grid').innerHTML = '';
+  updatePhotoStatus();
+  document.getElementById('other-field').style.display = 'none';
+}
+
+// ─── HISTORY ───────────────────────────────────────────────────────────────
+function renderHistory() {
+  const nameFilter = document.getElementById('filter-name').value;
+  const actFilter = document.getElementById('filter-activity').value;
+
+  // Update name filter options
+  const names = [...new Set(entries.map(e => e.name))].sort();
+  const nameSelect = document.getElementById('filter-name');
+  const curName = nameSelect.value;
+  nameSelect.innerHTML = '<option value="">All Engineers</option>';
+  names.forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n;
+    if (n === curName) o.selected = true;
+    nameSelect.appendChild(o);
+  });
+
+  const filtered = entries.filter(e =>
+    (!nameFilter || e.name === nameFilter) &&
+    (!actFilter || e.activity === actFilter || e.activity.startsWith(actFilter))
+  );
+
+  const list = document.getElementById('history-list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No entries yet</div><div style="font-size:13px;margin-top:6px">Log an entry to see it here</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => {
+    const isExp = expandedId === e.id;
+    const statusCls = e.status === 'Completed' ? 'pill-done' : 'pill-prog';
+    const locLabel = `${e.zone} › ${e.road} › ${e.location}`;
+    return `
+    <div class="card" id="card-${e.id}">
+      <div class="card-top" onclick="toggleCard(${e.id})">
+        <div class="card-left">
+          <div class="card-name">${e.name}</div>
+          <div class="card-activity">${e.activity}</div>
+          <div class="card-loc">📍 ${locLabel}</div>
+        </div>
+        <div class="card-right">
+          <span class="pill ${statusCls}">${e.status}</span>
+          <span class="card-date">${formatDate(e.date)}</span>
+          <span class="card-chevron">${isExp ? '▲' : '▼'}</span>
+        </div>
+      </div>
+      ${isExp ? `
+      <div class="card-body fade">
+        <div class="card-chips">
+          ${e.metres ? `<span class="chip">📏 ${e.metres} m</span>` : ''}
+          ${e.manholeCount ? `<span class="chip">🔵 ${e.manholeCount} manholes</span>` : ''}
+          ${e.photoCount > 0 ? `<span class="chip">📷 ${e.photoCount} photo${e.photoCount>1?'s':''}</span>` : ''}
+          <span class="chip">⏱ ${formatTime(e.timestamp)}</span>
+        </div>
+        ${e.notes ? `<div class="card-notes">"${e.notes}"</div>` : ''}
+        ${e.driveLink ? `<a class="drive-link" href="${e.driveLink}" target="_blank">📁 View Photos in Google Drive →</a>` : ''}
+        ${e.photoUrls && e.photoUrls.length > 0 ? `
+          <div class="card-photo-grid">
+            ${e.photoUrls.map(url => `<div class="card-photo"><img src="${url}" loading="lazy"></div>`).join('')}
+          </div>` : ''}
+        <button class="delete-btn" onclick="deleteEntry(${e.id})">Delete entry</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  expandedId = expandedId === id ? null : id;
+  renderHistory();
+}
+
+function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  entries = entries.filter(e => e.id !== id);
+  saveEntries();
+  updateBadge();
+  expandedId = null;
+  renderHistory();
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function show(id) { document.getElementById(id).style.display = ''; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function err(id) { document.getElementById(id).classList.add('err-input'); }
+function unerr(id) { document.getElementById(id).classList.remove('err-input'); }
+function saveEntries() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch(e) {} }
+function updateBadge() {
+  const b = document.getElementById('history-badge');
+  b.textContent = entries.length;
+  b.style.display = entries.length > 0 ? '' : 'none';
+}
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+function formatTime(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+</script>
+</body>
+</html>
