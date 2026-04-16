@@ -640,8 +640,9 @@ async function submitForm() {
   // Submit to Google Apps Script
   if (SCRIPT_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
     try {
-      const formData = new FormData();
-      formData.append('data', JSON.stringify({
+      // Apps Script requires URL-encoded params (not FormData)
+      const params = new URLSearchParams();
+      params.append('data', JSON.stringify({
         name: entry.name, date: entry.date, zone: entry.zone,
         road: entry.road, locationType: locType, location: entry.location,
         activity: entry.activity, status: entry.status,
@@ -649,9 +650,13 @@ async function submitForm() {
         notes: entry.notes, photoCount: entry.photoCount,
         timestamp: entry.timestamp,
       }));
-      photos.forEach((p, i) => formData.append(`photo_${i}`, p.file, p.name));
+      // Send photos as base64 data URLs (photo_0, photo_1, ...)
+      photos.forEach((p, i) => params.append(`photo_${i}`, p.url));
 
-      const res = await fetch(SCRIPT_URL, { method: 'POST', body: formData });
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: params,
+      });
       const json = await res.json();
       if (json.driveLink) entry.driveLink = json.driveLink;
     } catch(e) {
